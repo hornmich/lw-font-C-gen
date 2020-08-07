@@ -100,6 +100,7 @@ class Font:
         char_set_code = ''.join('{0}\n'.format(c.get_code()) for c in self.char_set)
         pixmaps_code = ''.join('{0}\n'.format(c.pixmap.get_code()) for c in self.char_set)
         chars_def_code = ''.join('{0}'.format(c.get_code()) for c in self.char_set)
+        chars_def_code = chars_def_code[:-2]+'\n'
         chars_code = '\
 const lw_char_map_t chars_{0}[{1}_CHARS_CNT] = {{\n\
 {2}\
@@ -205,6 +206,7 @@ class Pixmap:
         pixmap_def_name = 'pixmap_{0}'.format(id(self))
         bytes_str = ''.join('0x{:02X}, '.format(byte) for byte in self.bytes)
         bytes_str = bytes_str[:-2]
+
         illustration = self.__str__()
 
         return '\
