@@ -49,7 +49,10 @@ class Char:
         self.pixmap = Pixmap(image_file, self.rect)
         
     def get_code(self):
-        pixmap_def_name = 'pixmap_{0}'.format(id(self.pixmap))
+        if len(self.pixmap.bytes) == 0:
+            pixmap_def_name = 'NULL'
+        else:
+            pixmap_def_name = 'pixmap_{0}'.format(id(self.pixmap))
         return '\
     {{ \n\
         .char_code = L\'{0}\', \n\
