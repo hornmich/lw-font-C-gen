@@ -1,0 +1,4 @@
+/*
+${char_preview}
+*/
+const uint8_t ${pixmap_definition_name}[] = {$pixmap_bytes};

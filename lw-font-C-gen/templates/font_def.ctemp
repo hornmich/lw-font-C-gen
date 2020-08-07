@@ -1,0 +1,23 @@
+/* Generated font code */
+#include "lw_font.h"
+
+#define ${font_name_upper}_CHARS_CNT (${chars_cnt})
+
+/* Pixmaps */
+${pixmap_def}
+
+/* Characters */
+const lw_char_map_t chars_${font_name}[${font_name_upper}_CHARS_CNT] = {
+${chars_def}
+};
+
+/* Font */
+const lw_font_t font_${font_name} = {
+    .family = "${family}",
+    .size = ${size},
+    .height = ${height},
+    .style = "${style}",
+    .inv = ${inverted},
+    .chars_cnt = ${font_name_upper}_CHARS_CNT,
+    .chars = chars_${font_name}
+};

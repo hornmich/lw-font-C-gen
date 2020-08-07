@@ -15,10 +15,10 @@ import sys
 from PIL import Image
 import xmltodict
 from xmltodict import ParsingInterrupted
-from test.test_print import ClassWith__str__
-from typing import Set
 import logging
 from sys import exit
+from string import Template
+from typing import Set
 
 class Offset:
     def __init__(self, x, y):
@@ -53,22 +53,19 @@ class Char:
             pixmap_def_name = 'NULL'
         else:
             pixmap_def_name = 'pixmap_{0}'.format(id(self.pixmap))
-        return '\
-    {{ \n\
-        .char_code = L\'{0}\', \n\
-        .char_def = {{\n\
-            .width = {1},\n\
-            .offset_x = {2},\n\
-            .offset_y = {3},\n\
-            .pixmap = {4}\n\
-        }}\n\
-    }},\n'.format(
-            self.get_c_wchar(),
-            self.width,
-            self.offset.x,
-            self.offset.y,
-            pixmap_def_name
-            )
+        code_filling = {
+            'char_code': self.get_c_wchar(),
+            'width': self.width,
+            'offset_x': self.offset.x,
+            'offset_y': self.offset.y,
+            'pixmap': pixmap_def_name
+        }
+        
+        with open('templates/char_def.ctemp', 'r') as temp_file:
+            template = Template( temp_file.read() )
+        code = template.safe_substitute(code_filling)
+
+        return code
     
     def get_c_wchar(self):
         escape = ['\'', '\\', '\"']
@@ -97,61 +94,38 @@ class Font:
         return '{0}_{1}_{2}'.format(self.family, self.size, self.style)
     
     def get_code(self):
-        char_set_code = ''.join('{0}\n'.format(c.get_code()) for c in self.char_set)
         pixmaps_code = ''.join('{0}\n'.format(c.pixmap.get_code()) for c in self.char_set)
         chars_def_code = ''.join('{0}'.format(c.get_code()) for c in self.char_set)
-        chars_def_code = chars_def_code[:-2]+'\n'
-        chars_code = '\
-const lw_char_map_t chars_{0}[{1}_CHARS_CNT] = {{\n\
-{2}\
-}};\n\
-'.format(self.short_name(), self.short_name().upper(), chars_def_code)
-
-        file_header = '\
-/* Generated font code */\n \
-#include \"lw_font.h\"\n\
-\n\
-#define {0}_CHARS_CNT ({1})\n\
-\n\
-'.format(
-        self.short_name().upper(),
-        len(self.char_set)
-        )
-       
-        font_code = '\
-const lw_font_t font_{0} = {{ \n\
-    .family = \"{1}\", \n\
-    .size = {2}, \n\
-    .height = {3}, \n\
-    .style = \"{4}\", \n\
-    .inv = {5}, \n\
-    .chars_cnt = {6}_CHARS_CNT, \n\
-    .chars = chars_{0}\n\
-}}; \n'.format(
-        self.short_name(),
-        self.family,
-        self.size,
-        self.height,
-        self.style,
-        int(self.inverted),
-        self.short_name().upper(),
-        )
+        code_filling = {
+            'font_name_upper': self.short_name().upper(),
+            'chars_cnt': len(self.char_set),
+            'pixmap_def': pixmaps_code,
+            'font_name': self.short_name(),
+            'chars_def': chars_def_code,
+            'family': self.family,
+            'size': self.size,
+            'height': self.height,
+            'style': self.style,
+            'inverted': int(self.inverted)
+        }
         
-        return file_header+pixmaps_code+chars_code+font_code
+        with open('templates/font_def.ctemp', 'r') as temp_file:
+            template = Template( temp_file.read() )
+        code = template.safe_substitute(code_filling)
+
+        return code
         
     def get_header(self):
-        blocker = '_{0}_H_'.format(self.short_name().upper())
-        return '\
-/* Generated header file for font. */\n\
-\n\
-#ifndef {0}\n\
-#define {0}\n\
-\n\
-#include \"lw_font.h\"\n\
-\n\
-extern const lw_font_t font_{1};\n\
-\n\
-#endif /* {0} */'.format(blocker, self.short_name())
+        code_filling = {
+            'header_blocker': '_{0}_H_'.format(self.short_name().upper()),
+            'font_name': self.short_name()
+        }
+        
+        with open('templates/header.ctemp', 'r') as temp_file:
+            template = Template( temp_file.read() )
+        code = template.safe_substitute(code_filling)
+
+        return code
     
 class Pixmap:
     def __init__(self, image_file: str, rect: Rect = None):
@@ -203,21 +177,19 @@ class Pixmap:
         return str
     
     def get_code(self):
-        pixmap_def_name = 'pixmap_{0}'.format(id(self))
         bytes_str = ''.join('0x{:02X}, '.format(byte) for byte in self.bytes)
         bytes_str = bytes_str[:-2]
+        code_filling = {
+            'char_preview' : self.__str__(), 
+            'pixmap_definition_name' : 'pixmap_{0}'.format(id(self)), 
+            'pixmap_bytes':bytes_str
+        }
 
-        illustration = self.__str__()
+        with open('templates/pixmap_def.ctemp', 'r') as temp_file:
+            template = Template( temp_file.read() )
+        code = template.safe_substitute(code_filling)
 
-        return '\
-/*\n\
-{0}\n\
-*/\n\
-const uint8_t {1}[] = {{{2}}};\
-'.format(
-        illustration,
-        pixmap_def_name,
-        bytes_str)
+        return code
          
 def getOptions(args=sys.argv[1:]):
     parser = argparse.ArgumentParser(description="Parses command.")
