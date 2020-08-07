@@ -12,41 +12,19 @@ The script takes the bitmap and the XML file and generates C code for lw_font li
 '''
 import argparse
 import sys
-from PIL import Image
-import xmltodict
-from xmltodict import ParsingInterrupted
+from PIL import Image, ImageFont
 import logging
 from sys import exit
 from string import Template
-from typing import Set
-
-class Offset:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        
-class Rect:
-    def __init__(self, x: int, y: int, w: int, h: int):
-        self.x = int(x)
-        self.y = int(y)
-        self.w = int(w)
-        self.h = int(h)
-        self.x2 = self.x+self.w
-        self.y2 = self.y+self.h
+from typing import Set, List, Tuple
 
 class Char:
-    def __init__(self, image_file: str, width: int, offset: str, rect: str, code: str):
-        self.width = width
-        offset = str.split(offset)
-        if len(offset) != 2:
-            raise Exception('Offset is an invalid string')
-        self.offset = Offset(x = offset[0], y = offset[1])
-        rect = str.split(rect)
-        if len(rect) != 4:
-            raise Exception('Rect is an invalid string')
-        self.rect = Rect(x = rect[0], y = rect[1], w = rect[2], h = rect[3])
+    def __init__(self, font: ImageFont, code: str):
+        self.width = ttf_font.getsize(c)[0]
+        self.offset = ttf_font.getoffset(c)
         self.code = code
-        self.pixmap = Pixmap(image_file, self.rect)
+        bmp = ttf_font.getmask(c, mode='1')
+        self.pixmap = Pixmap(list(bmp), bmp.size)
         
     def get_code(self):
         if len(self.pixmap.bytes) == 0:
@@ -56,8 +34,8 @@ class Char:
         code_filling = {
             'char_code': self.get_c_wchar(),
             'width': self.width,
-            'offset_x': self.offset.x,
-            'offset_y': self.offset.y,
+            'offset_x': self.offset[0],
+            'offset_y': self.offset[1],
             'pixmap': pixmap_def_name
         }
         
@@ -128,25 +106,18 @@ class Font:
         return code
     
 class Pixmap:
-    def __init__(self, image_file: str, rect: Rect = None):
+    def __init__(self, image_bytes: list, size: tuple):
         logging.info('PIXMAP: Creating new pixmap')
-        logging.debug('Image file: {0}, rect: {1}'.format(image_file, rect))
-        im = Image.open(options.image, 'r')
-        pixels = list(im.getdata())
+        logging.debug('Image data: {0}'.format(image_bytes))
         
-        if rect == None:
-            rect = Rect(x = 0, y = 0, w = width, h = height)
-        
-        letter_img = im.crop((rect.x, rect.y, rect.x2, rect.y2))
-        pixels = list(letter_img.getdata())
-        self.width, self.height = letter_img.size
+        self.width, self.height = size
         logging.debug('Pixmap dimensions: [{0}, {1}]'.format(self.width, self.height))
         
         logging.info('Creating bytearrays from pixels.')
         bytes = []
         byte = 0
         bit_cnt = 0
-        for bit in pixels:
+        for bit in image_bytes:
             byte = byte + ((bit>0) << bit_cnt)
             bit_cnt += 1
             if bit_cnt == 8:
@@ -166,9 +137,9 @@ class Pixmap:
         for line in range(0, self.height):
             for column in range(0, self.width):
                 if self.bytes[byte] & (1<<bit):
-                    str += ' '
-                else:
                     str += '#'
+                else:
+                    str += ' '
                 bit += 1
                 if bit >= 8:
                     byte += 1
@@ -193,10 +164,11 @@ class Pixmap:
          
 def getOptions(args=sys.argv[1:]):
     parser = argparse.ArgumentParser(description="Parses command.")
-    parser.add_argument("-i", "--image", help="Your image input file.")
-    parser.add_argument("-x", "--xml", help="Your xml descriptor file.")
+    parser.add_argument('TTF_file', metavar='ttf-file', type=str, help="TrueType (ttf) input font file.")
+    parser.add_argument('size', metavar='size', type=int, help="Size in pixels.")
+    parser.add_argument('chars', metavar='chars-file', type=str, help="File with characters.")
     parser.add_argument("-o", "--output", default=None, help="Your destination output file name.")
-    parser.add_argument("-b", "--inverted", default=False, type=bool, help="Type pixmap is inverted.")
+    parser.add_argument("-b", "--inverted", default=False, type=bool, help="Generate inverted bitmaps.")
 
     options = parser.parse_args(args)
     return options
@@ -207,40 +179,34 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', filename='lwfontcgen.log', filemode='w', level=logging.DEBUG)
     
     logging.info('Lightweight generator started.')
-    logging.debug('Input files:\n - Image: {0}\n - XML: {1}'.format(options.image, options.xml))
+    logging.debug('Inputs:\n - TTF: {0}\n - Size: {1} px\n - Characters file: {2}'.format(options.TTF_file, options.size, options.chars))
 
     try:
-        with open(options.xml, 'r') as xmlfile:
-            xml = xmlfile.read()
-            logging.info('Parsing XML.')
-            xml = xmltodict.parse(xml)
-            family = xml['Font']['@family']
-            size = xml['Font']['@size']
-            height = xml['Font']['@height']
-            style = xml['Font']['@style']
-            chars = xml['Font']['Char']
-            # Build character set
-            logging.info('Adding characters.')
-            for char in chars:
-                tmp_char = Char(image_file = options.image, width = char['@width'], offset = char['@offset'], rect = char['@rect'], code = char['@code'])
-                logging.debug('Character \'{0}\' [w: {1}; h: {2}]'.format(tmp_char.code, tmp_char.pixmap.width, tmp_char.pixmap.height))
-                logging.debug('\n{0}'.format(tmp_char.pixmap.__str__()))
-                char_set.append(tmp_char)
+        logging.info('Opening TTF font.')
+        ttf_font=ImageFont.truetype(font=options.TTF_file, size=options.size)
+        family=ttf_font.getname()[0]
+        style=ttf_font.getname()[1]
+        height=options.size
+        size = options.size
+        
+        logging.info('Loading list of characters.')
+        with open(options.chars, 'r') as chars_file:
+            chars=list(chars_file.read())
+        logging.info('Done, {0} characters loaded.'.format(len(chars)))
+        logging.debug(chars)
+
+        logging.info('Creating characters.')
+        for c in chars:
+            logging.info('Character ' + c)
+            tmp_char = Char(font=ttf_font, code=c)
+            logging.debug('Character \'{0}\' [w: {1}; h: {2}]'.format(tmp_char.code, tmp_char.pixmap.width, tmp_char.pixmap.height))
+            logging.debug('\n{0}'.format(tmp_char.pixmap.__str__()))
+            char_set.append(tmp_char)
     except OSError as e:
         str = 'ERROR: Input XML file {0} could not be read: {1}'.format(options.xml, e.msg)
         print(str)
         logging.error(str)  
         exit(1) 
-    except ParsingInterrupted as e :
-        str = 'ERROR: XML parsing failed: {0}'.format(e.msg)
-        print(str)
-        logging.error(str)
-        exit(2)  
-    except ExpatError as e:
-        str = 'ERROR: XML parsing failed: {0}'.format(e.msg)
-        print(str)
-        logging.error(str)
-        exit(2)          
     except Exception as e:
         str = 'ERROR: {0}'.format(e.msg)
         print(str)
