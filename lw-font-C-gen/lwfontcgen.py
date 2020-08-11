@@ -23,6 +23,7 @@ class Char:
         self.code = code
         bmp = ttf_font.getmask2(code, mode='1')
         self.width = bmp[0].size[0]
+        self.height = bmp[0].size[1]
         self.offset = bmp[1]
         self.pixmap = Pixmap(list(bmp[0]), bmp[0].size)
         
@@ -34,6 +35,7 @@ class Char:
         code_filling = {
             'char_code': self.get_c_wchar(),
             'width': self.width,
+            'height': self.height,
             'offset_x': self.offset[0],
             'offset_y': self.offset[1],
             'pixmap': pixmap_def_name

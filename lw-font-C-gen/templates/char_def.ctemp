@@ -2,6 +2,7 @@
         .char_code = L'$char_code',
         .char_def = {
             .width = $width,
+            .height = $height,
             .offset_x = $offset_x,
             .offset_y = $offset_y,
             .pixmap = $pixmap
