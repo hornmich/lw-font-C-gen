@@ -188,7 +188,7 @@ if __name__ == '__main__':
         ttf_font=ImageFont.truetype(font=options.TTF_file, size=options.size)
         family=ttf_font.getname()[0]
         style=ttf_font.getname()[1]
-        height=options.size
+        height=ttf_font.height
         size = options.size
         
         logging.info('Loading list of characters.')
