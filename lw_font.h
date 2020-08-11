@@ -2,7 +2,7 @@
  * ili9341_font.h
  *
  *  Created on: 20. 7. 2020
- *      Author: E9990291
+ *      Author: Michal Horn
  */
 
 #ifndef LW_FONT_H_
@@ -34,5 +34,15 @@ typedef struct {
 	const lw_char_map_t *chars;
 	const bool inv;
 } lw_font_t;
+
+/**
+ * Lookup the character in the font charset.
+ *
+ * @param [in] font The font to look for the character
+ * @param [in] c Character to look for.
+ *
+ * @returns Pointer to character definition or NULL if not found.
+ */
+const lw_char_def_t* lw_get_char(const lw_font_t* font, wchar_t c);
 
 #endif /* LW_FONT_H_ */
