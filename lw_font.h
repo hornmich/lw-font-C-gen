@@ -14,8 +14,8 @@
 
 typedef struct {
 	const uint8_t width;
-	const uint8_t offset_x;
-	const uint8_t offset_y;
+	const int8_t offset_x;
+	const int8_t offset_y;
 	const uint8_t* pixmap;
 } lw_char_def_t;
 
