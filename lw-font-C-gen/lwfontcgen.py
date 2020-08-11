@@ -190,7 +190,7 @@ if __name__ == '__main__':
         size = options.size
         
         logging.info('Loading list of characters.')
-        with open(options.chars, 'r') as chars_file:
+        with open(options.chars, 'r', encoding='utf8') as chars_file:
             chars=list(chars_file.read())
         logging.info('Done, {0} characters loaded.'.format(len(chars)))
         logging.debug(chars)
@@ -228,11 +228,11 @@ if __name__ == '__main__':
     try:
         ofile = options.output+'.c'
         logging.info('Generating code.')
-        with open(ofile, 'w') as out_file:
+        with open(ofile, 'w', encoding='utf8') as out_file:
             out_file.write(font.get_code())
         logging.info('Generating header.')
         ofile = options.output+'.h'
-        with open(ofile, 'w') as out_file:
+        with open(ofile, 'w', encoding='utf8') as out_file:
             out_file.write(font.get_header())
     except OSError as e:
         str = 'ERROR: Output file {0} could not be created: {1}'.format(ofile, e.msg)
