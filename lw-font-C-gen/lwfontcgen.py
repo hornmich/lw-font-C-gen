@@ -20,11 +20,11 @@ from typing import Set, List, Tuple
 
 class Char:
     def __init__(self, font: ImageFont, code: str):
-        self.width = ttf_font.getsize(c)[0]
-        self.offset = ttf_font.getoffset(c)
         self.code = code
-        bmp = ttf_font.getmask(c, mode='1')
-        self.pixmap = Pixmap(list(bmp), bmp.size)
+        bmp = ttf_font.getmask2(code, mode='1')
+        self.width = bmp[0].size[0]
+        self.offset = bmp[1]
+        self.pixmap = Pixmap(list(bmp[0]), bmp[0].size)
         
     def get_code(self):
         if len(self.pixmap.bytes) == 0:
