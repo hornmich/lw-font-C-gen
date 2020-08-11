@@ -10,6 +10,7 @@ input and generates C code that can be directly included into your project.
 
 * Python3 (tested and developed on Python 3.8
 * The generated code requires C99 compatible compiler
+* (PIL library)[https://pillow.readthedocs.io/en/3.0.x/installation.html] to be installed 
 
 ## Usage
 
@@ -101,6 +102,7 @@ The contenf of the generated font_Arial_12_Bold.c will be (shortened)
 			.char_code = L'a',
 			.char_def = {
 				.width = 7,
+				.height = 10
 				.offset_x = 0,
 				.offset_y = 4,
 				.pixmap = pixmap_65500640
@@ -113,6 +115,7 @@ The contenf of the generated font_Arial_12_Bold.c will be (shortened)
 			.char_code = L'D',
 			.char_def = {
 				.width = 9,
+				.height = 10,
 				.offset_x = 0,
 				.offset_y = 2,
 				.pixmap = pixmap_65501168
