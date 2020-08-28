@@ -61,4 +61,25 @@ typedef struct {
  */
 const lw_char_def_t* lw_get_char(const lw_font_t* font, wchar_t c);
 
+/**
+ * Get width of single character.
+ *
+ * @param [in] font TTF font used.
+ * @param [in] c Character
+ * @returns character width in pixels.
+ */
+uint16_t lw_get_char_width(const lw_font_t* font, wchar_t c);
+
+/**
+ * Calculate the string line width.
+ *
+ * The function returns the width of the string in pixels. If the string contains line
+ * delimiters (\n), it will stop by calculating the first line width.
+ *
+ * @param [in] font TTF font used.
+ * @param [in] str String to calculate width.
+ * @return length of the string in pixels.
+ */
+uint16_t lw_get_string_line_width(const lw_font_t* font, const wchar_t* str);
+
 #endif /* LW_FONT_H_ */
