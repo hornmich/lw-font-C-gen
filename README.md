@@ -1,4 +1,4 @@
-#Lightweight Embedded C Font Generator
+# Lightweight Embedded C Font Generator
 
 This is a Python script for generating Unicode fonts for C embedded firmware from any
 TTF (TrueType Font).
